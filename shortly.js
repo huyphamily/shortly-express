@@ -2,6 +2,7 @@ var express = require('express');
 var util = require('./lib/utility');
 var partials = require('express-partials');
 var bodyParser = require('body-parser');
+var session = require('express-session');
 
 
 var db = require('./app/config');
@@ -21,38 +22,24 @@ app.use(bodyParser.json());
 // Parse forms (signup/login)
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
+app.use(session({secret: 'secret code'}));
 
-app.get('/',
-function(req, res) {
-  loggedIn(req, res, function(req, res){
-    res.render('index');
-  });
+app.get('/', loggedIn, function(req, res, next){
+  res.render('index');
 });
 
-app.get('/create',
-function(req, res) {
-  loggedIn(req, res, function(req, res){
-    res.render('index');
-  });
+app.get('/create', loggedIn, function(req, res){
+  res.render('index');
 });
 
-app.get('/links',
-function(req, res) {
+app.get('/links', loggedIn, function(req, res) {
+
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
   });
+
 });
 
-// app.get('/links',
-// function(req, res) {
-//   util.loggedIn(req, res, function(req, res){
-
-//     Links.reset().fetch().then(function(links) {
-//       res.send(200, links.models);
-//     });
-    
-//   });
-// });
 
 app.post('/links',
 function(req, res) {
@@ -91,22 +78,46 @@ function(req, res) {
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
-
 app.get('/login',
 function(req, res) {
   res.render('login');
 });
 
-function loggedIn(req, res, cb){
-  if (req.user) {
-    cb(req, res);
+app.get('/signup',
+function(req, res) {
+  res.render('signup');
+});
+
+app.post('/login', function(req, res){
+  var username = req.body.username;
+  var password = req.body.password;
+
+  new User({username: username})
+    .fetch()
+    .then(function(model){
+      console.log(model);
+      var pwd = model.get('password');
+
+      if(pwd === password){
+        console.log('password matches');
+        req.session.regenerate(function(){
+          req.session.user = 'logged in';
+          res.redirect('/');
+        });
+      }
+
+    });
+
+});
+
+//false for now till i figure it out
+function loggedIn(req, res, next){
+  if ( req.session.user ) {
+    next();
   } else {
     res.redirect('/login');
   }
 }
-
-
-
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
