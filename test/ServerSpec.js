@@ -6,6 +6,7 @@ var Users = require('../app/collections/users');
 var User = require('../app/models/user');
 var Links = require('../app/collections/links');
 var Link = require('../app/models/link');
+var bcrypt = require('bcrypt-nodejs');
 
 /************************************************************/
 // Mocha doesn't have a way to designate pending before blocks.
@@ -62,11 +63,12 @@ describe('', function() {
   describe('Link creation:', function(){
 
     var requestWithSession = request.defaults({jar: true});
+    var hash = bcrypt.hashSync("Phillip");
 
     beforeEach(function(done){      // create a user that we can then log-in with
       new User({
           'username': 'Phillip',
-          'password': 'Phillip'
+          'password': hash
       }).save().then(function(){
         var options = {
           'method': 'POST',

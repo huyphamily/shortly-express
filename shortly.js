@@ -24,15 +24,15 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 app.use(session({secret: 'secret code'}));
 
-app.get('/', loggedIn, function(req, res, next){
+app.get('/', util.loggedIn, function(req, res, next){
   res.render('index');
 });
 
-app.get('/create', loggedIn, function(req, res){
+app.get('/create', util.loggedIn, function(req, res){
   res.render('index');
 });
 
-app.get('/links', loggedIn, function(req, res) {
+app.get('/links', util.loggedIn, function(req, res) {
 
   Links.reset().fetch().then(function(links) {
     res.send(200, links.models);
@@ -88,36 +88,38 @@ function(req, res) {
   res.render('signup');
 });
 
+//--------------------------------should modulize
 app.post('/login', function(req, res){
+  //grab username and password
   var username = req.body.username;
   var password = req.body.password;
-
+  console.log('post was call in login');
+  //search for user
   new User({username: username})
     .fetch()
     .then(function(model){
-      console.log(model);
-      var pwd = model.get('password');
-
-      if(pwd === password){
-        console.log('password matches');
-        req.session.regenerate(function(){
-          req.session.user = 'logged in';
-          res.redirect('/');
+      //if user exist
+      console.log('model', model);
+      if(model){
+        //check if password matches
+        model.checkPass(password, function(result){
+          //if it is a match
+          if(result){
+            req.session.regenerate(function(){
+              req.session.user = true;
+              res.redirect('/');
+            });
+          }
         });
+      //if user doesn't exist
+      } else {
+        res.redirect('/login');
       }
-
     });
-
 });
+//-------------------------------
 
-//false for now till i figure it out
-function loggedIn(req, res, next){
-  if ( req.session.user ) {
-    next();
-  } else {
-    res.redirect('/login');
-  }
-}
+
 
 /************************************************************/
 // Handle the wildcard route last - if all other routes fail
