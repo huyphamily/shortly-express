@@ -24,7 +24,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static(__dirname + '/public'));
 app.use(session({secret: 'secret code'}));
 
-app.get('/', util.loggedIn, function(req, res, next){
+app.get('/', util.loggedIn, function(req, res){
   res.render('index');
 });
 
@@ -38,22 +38,6 @@ app.get('/links', util.loggedIn, function(req, res) {
     res.send(200, links.models);
   });
 
-});
-
-app.get('/logout',
-function(req, res) {
-  delete req.session.user;
-  res.redirect('/login');
-});
-
-app.get('/login',
-function(req, res) {
-  res.render('login');
-});
-
-app.get('/signup',
-function(req, res) {
-  res.render('signup');
 });
 
 app.post('/links',
@@ -94,84 +78,67 @@ function(req, res) {
 // Write your authentication routes here
 /************************************************************/
 
-//--------------------------------should modulize
+app.get('/logout',
+function(req, res) {
+  req.session.destroy(function(){
+    res.redirect('/login');
+  });
+});
+
+app.get('/login',
+function(req, res) {
+  res.render('login');
+});
+
+app.get('/signup',
+function(req, res) {
+  res.render('signup');
+});
+
+
 app.post('/login', function(req, res){
   //grab username and password
   var username = req.body.username;
   var password = req.body.password;
-  console.log('post was call in login');
   //search for user
-  new User({username: username})
-    .fetch()
-    .then(function(model){
+  new User({username: username}).fetch().then(function(model){
       //if user exist
-      console.log('model', model);
       if(model){
         //check if password matches
         model.checkPass(password, function(result){
           //if it is a match
           if(result){
             //create session
-            req.session.regenerate(function(){
-              req.session.user = true;
-              res.redirect('/');
-            });
+            util.createSession(req, res);
           }
         });
       //if user doesn't exist
       } else {
-        // alert('Username does not exist');
         res.redirect('/login');
       }
     });
 });
 
-//-------------------------------
+
 app.post('/signup', function(req, res){
   var username = req.body.username;
   var password = req.body.username;
-  console.log('post was call in signup');
 
   //check for username
-  new User({username: username})
-    .fetch()
-    .then(function(model){
-
-      console.log('model', model);
+  new User({username: username}).fetch().then(function(model){
       //if user doesn't exist
       if(!model){
-        new User({username: username})
-          .save()
-          .then(function(model){
-            model.hashPass(password);
-          })
-          .then(function(){
-            //create session
-            req.session.regenerate(function(){
-              req.session.user = true;
-              res.redirect('/');
-            });
-
-          });
+        //create user
+        Users.create({username: username, password: password})
+        .then(function(){
+        //create session
+          util.createSession(req, res);
+        });
       //if username already exist
       } else {
-        //need to refactor later
-          //check if password matches
-          model.checkPass(password, function(result){
-            //if it is a match
-            if(result){
-              //create session
-              req.session.regenerate(function(){
-                req.session.user = true;
-                res.redirect('/');
-              });
-            }
-
-          });
+          res.redirect('/signup');
       }
-      
     });
-
 });
 
 

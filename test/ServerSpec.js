@@ -63,12 +63,11 @@ describe('', function() {
   describe('Link creation:', function(){
 
     var requestWithSession = request.defaults({jar: true});
-    var hash = bcrypt.hashSync("Phillip");
 
     beforeEach(function(done){      // create a user that we can then log-in with
       new User({
           'username': 'Phillip',
-          'password': hash
+          'password': 'Phillip'
       }).save().then(function(){
         var options = {
           'method': 'POST',
@@ -290,12 +289,11 @@ describe('', function() {
   describe('Account Login:', function(){
 
     var requestWithSession = request.defaults({jar: true});
-    var hash = bcrypt.hashSync("Phillip");
 
     beforeEach(function(done){
       new User({
           'username': 'Phillip',
-          'password': hash
+          'password': 'Phillip'
       }).save().then(function(){
         done()
       });
