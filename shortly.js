@@ -40,6 +40,12 @@ app.get('/links', util.loggedIn, function(req, res) {
 
 });
 
+app.get('/logout',
+function(req, res) {
+  delete req.session.user;
+  res.redirect('/login');
+});
+
 app.get('/login',
 function(req, res) {
   res.render('login');
