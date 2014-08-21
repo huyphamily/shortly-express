@@ -287,14 +287,15 @@ describe('', function() {
 
   }); // 'Account Creation'
 
-  xdescribe('Account Login:', function(){
+  describe('Account Login:', function(){
 
     var requestWithSession = request.defaults({jar: true});
+    var hash = bcrypt.hashSync("Phillip");
 
     beforeEach(function(done){
       new User({
           'username': 'Phillip',
-          'password': 'Phillip'
+          'password': hash
       }).save().then(function(){
         done()
       });

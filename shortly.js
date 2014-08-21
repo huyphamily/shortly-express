@@ -114,7 +114,7 @@ app.post('/login', function(req, res){
         });
       //if user doesn't exist
       } else {
-        alert('Username does not exist');
+        // alert('Username does not exist');
         res.redirect('/login');
       }
     });
