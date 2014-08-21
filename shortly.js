@@ -40,6 +40,15 @@ app.get('/links', util.loggedIn, function(req, res) {
 
 });
 
+app.get('/login',
+function(req, res) {
+  res.render('login');
+});
+
+app.get('/signup',
+function(req, res) {
+  res.render('signup');
+});
 
 app.post('/links',
 function(req, res) {
@@ -78,15 +87,6 @@ function(req, res) {
 /************************************************************/
 // Write your authentication routes here
 /************************************************************/
-app.get('/login',
-function(req, res) {
-  res.render('login');
-});
-
-app.get('/signup',
-function(req, res) {
-  res.render('signup');
-});
 
 //--------------------------------should modulize
 app.post('/login', function(req, res){
@@ -105,6 +105,7 @@ app.post('/login', function(req, res){
         model.checkPass(password, function(result){
           //if it is a match
           if(result){
+            //create session
             req.session.regenerate(function(){
               req.session.user = true;
               res.redirect('/');
@@ -113,12 +114,59 @@ app.post('/login', function(req, res){
         });
       //if user doesn't exist
       } else {
+        alert('Username does not exist');
         res.redirect('/login');
       }
     });
 });
-//-------------------------------
 
+//-------------------------------
+app.post('/signup', function(req, res){
+  var username = req.body.username;
+  var password = req.body.username;
+  console.log('post was call in signup');
+
+  //check for username
+  new User({username: username})
+    .fetch()
+    .then(function(model){
+
+      console.log('model', model);
+      //if user doesn't exist
+      if(!model){
+        new User({username: username})
+          .save()
+          .then(function(model){
+            model.hashPass(password);
+          })
+          .then(function(){
+            //create session
+            req.session.regenerate(function(){
+              req.session.user = true;
+              res.redirect('/');
+            });
+
+          });
+      //if username already exist
+      } else {
+        //need to refactor later
+          //check if password matches
+          model.checkPass(password, function(result){
+            //if it is a match
+            if(result){
+              //create session
+              req.session.regenerate(function(){
+                req.session.user = true;
+                res.redirect('/');
+              });
+            }
+
+          });
+      }
+      
+    });
+
+});
 
 
 /************************************************************/

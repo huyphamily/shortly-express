@@ -10,6 +10,16 @@ var User = db.Model.extend({
       console.log(res);
       cb(res);
     });
+  },
+  hashPass: function(pw){
+    var pwHash;
+
+    bcrypt.hash(pw, null, null, function(err, hash){
+      if(err) {console.log(err);}
+      pwHash = hash;
+    });
+
+    this.set('password', pwHash);
   }
 });
 
